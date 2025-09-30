@@ -13,6 +13,7 @@ A felhasználók regisztrálhatnak, bejelentkezhetnek, feltölthetik a fordítá
 - 💬 Fórum a közösségi kommunikációhoz
 - 🔑 Admin felület moderáláshoz és tartalomkezeléshez
 - 🔎 Keresés és kategorizálás (játék szerint, verzió, állapot)
+- Discord webhook integráció
 
 ---
 
