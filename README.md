@@ -53,7 +53,6 @@ A felhasználók regisztrálhatnak, bejelentkezhetnek, feltölthetik a fordítá
 - Fordítások jóváhagyása / elutasítása
 - Felhasználói jogosultságok kezelése (moderátor, admin stb.)
 - Fórum moderálása
-- Discord webhook értesítések (új feltöltés, jelentés)
 
 ---
 
