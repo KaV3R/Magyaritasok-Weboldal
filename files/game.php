@@ -17,16 +17,16 @@ if (!$game) {
     die("A játék nem található!");
 }
 
-$stmt = $conn->prepare(
-    "SELECT t.version, t.status, t.translators, t.upload_date, t.description, u.username 
+$stmt_trans = $conn->prepare(
+    "SELECT t.version, t.status, t.translators, t.upload_date, t.description, t.file_path, t.download_url, u.id as uploader_id, u.username 
      FROM translations t
      JOIN users u ON t.user_id = u.id
      WHERE t.game_id = ? ORDER BY t.upload_date DESC"
 );
-$stmt->bind_param("i", $game_id);
-$stmt->execute();
-$translations = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-$stmt->close();
+$stmt_trans->bind_param("i", $game_id);
+$stmt_trans->execute();
+$translations = $stmt_trans->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt_trans->close();
 
 $page_title = htmlspecialchars($game['title']);
 include 'header.php';
@@ -73,7 +73,11 @@ include 'header.php';
                         <div class="flex justify-between items-start">
                             <div>
                                 <p class="text-xl font-bold">Verzió: <?php echo htmlspecialchars($trans['version']); ?></p>
-                                <p class="text-sm text-muted-light dark:text-muted-dark">Feltöltötte: <a href="#" class="text-primary hover:underline"><?php echo htmlspecialchars($trans['username']); ?></a></p>
+                                <p class="text-sm text-muted-light dark:text-muted-dark">Feltöltötte: 
+                                    <a href="profile.php?id=<?php echo $trans['uploader_id']; ?>" class="text-primary hover:underline font-medium">
+                                        <?php echo htmlspecialchars($trans['username']); ?>
+                                    </a>
+                                </p>
                                 <p class="text-sm text-muted-light dark:text-muted-dark">Fordítók: <?php echo htmlspecialchars($trans['translators'] ?: 'Nincs megadva'); ?></p>
                             </div>
                             <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium <?php echo $status_colors; ?> flex-shrink-0">
@@ -85,14 +89,23 @@ include 'header.php';
                         <div class="pt-4 border-t border-border-light dark:border-border-dark">
                              <p class="text-sm text-muted-light dark:text-muted-dark leading-relaxed">
                                 <span class="font-bold text-text-light dark:text-text-dark">Fordítók megjegyzése:</span>
-                                <?php echo htmlspecialchars($trans['description']);?>
+                                <?php echo htmlspecialchars($trans['description']); ?>
                             </p>
                         </div>
                         <?php endif; ?>
                         
                         <div class="pt-4 border-t border-border-light dark:border-border-dark flex justify-between items-center">
                              <p class="text-xs text-muted-light dark:text-muted-dark">Dátum: <?php echo date('Y.m.d', strtotime($trans['upload_date'])); ?></p>
-                             <button class="px-4 py-2 text-sm font-bold rounded-lg bg-primary text-white hover:bg-primary/90">Letöltés</button>
+                             
+                             <?php
+                                $download_link = !empty($trans['download_url']) ? $trans['download_url'] : $trans['file_path'];
+                             ?>
+                             <a href="<?php echo htmlspecialchars($download_link); ?>" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                class="px-4 py-2 text-sm font-bold rounded-lg bg-primary text-white hover:bg-primary/90">
+                                Letöltés
+                             </a>
                         </div>
                     </div>
                     <?php endforeach; ?>

@@ -8,8 +8,6 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 $topic_id = intval($_GET['id']);
 $current_user_id = $_SESSION['user_id'] ?? null;
 $current_user_role = $_SESSION['role'] ?? 'user';
-
-
 $errors = [];
 
 if (isset($_GET['delete_post']) && is_numeric($_GET['delete_post'])) {
@@ -17,14 +15,14 @@ if (isset($_GET['delete_post']) && is_numeric($_GET['delete_post'])) {
         die("Hozzáférés megtagadva!");
     }
     $post_to_delete_id = intval($_GET['delete_post']);
-
-    $stmt = $conn->prepare("SELECT user_id FROM forum_posts WHERE id = ?");
-    $stmt->bind_param("i", $post_to_delete_id);
-    $stmt->execute();
-    $post = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-
-    if ($post && ($post['user_id'] == $current_user_id || $current_user_role == 'admin')) {
+    
+    $stmt_check = $conn->prepare("SELECT user_id FROM forum_posts WHERE id = ?");
+    $stmt_check->bind_param("i", $post_to_delete_id);
+    $stmt_check->execute();
+    $post = $stmt_check->get_result()->fetch_assoc();
+    $stmt_check->close();
+    
+    if ($post && ($current_user_role == 'admin' || $post['user_id'] == $current_user_id)) {
         $stmt_delete = $conn->prepare("DELETE FROM forum_posts WHERE id = ?");
         $stmt_delete->bind_param("i", $post_to_delete_id);
         $stmt_delete->execute();
@@ -32,10 +30,18 @@ if (isset($_GET['delete_post']) && is_numeric($_GET['delete_post'])) {
         header("Location: topic.php?id=" . $topic_id);
         exit();
     } else {
-        die("Nincs jogosultságod a törléshez!");
+        die("Nincs jogosultságod a hozzászólás törléséhez!");
     }
 }
 
+if (isset($_GET['delete_topic']) && $current_user_role == 'admin') {
+    $stmt_delete = $conn->prepare("DELETE FROM forum_topics WHERE id = ?");
+    $stmt_delete->bind_param("i", $topic_id);
+    $stmt_delete->execute();
+    $stmt_delete->close();
+    header("Location: forum.php");
+    exit();
+}
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_reply'])) {
     if (!$current_user_id) {
@@ -58,27 +64,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit_reply'])) {
     }
 }
 
-
-$stmt = $conn->prepare("SELECT t.title, t.user_id as topic_author_id, t.edited_at as topic_edited_at FROM forum_topics t WHERE id = ?");
-$stmt->bind_param("i", $topic_id);
-$stmt->execute();
-$topic = $stmt->get_result()->fetch_assoc();
-$stmt->close();
-
+$stmt_topic = $conn->prepare("SELECT t.title, t.user_id as topic_author_id, t.edited_at FROM forum_topics t WHERE id = ?");
+$stmt_topic->bind_param("i", $topic_id);
+$stmt_topic->execute();
+$topic = $stmt_topic->get_result()->fetch_assoc();
+$stmt_topic->close();
 if (!$topic) {
     die("A téma nem található!");
 }
 
-$stmt = $conn->prepare(
-    "SELECT p.id as post_id, p.content, p.created_at, p.edited_at as post_edited_at, p.user_id as post_author_id, u.username, u.avatar_url, u.role 
+$stmt_posts = $conn->prepare(
+    "SELECT p.id as post_id, p.content, p.created_at, p.edited_at, p.user_id as post_author_id, u.id as user_id, u.username, u.avatar_url, u.role 
      FROM forum_posts p 
-     JOIN users u ON p.user_id = u.id 
+     LEFT JOIN users u ON p.user_id = u.id 
      WHERE p.topic_id = ? ORDER BY p.created_at ASC"
 );
-$stmt->bind_param("i", $topic_id);
-$stmt->execute();
-$posts = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-$stmt->close();
+$stmt_posts->bind_param("i", $topic_id);
+$stmt_posts->execute();
+$posts = $stmt_posts->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt_posts->close();
 
 $page_title = htmlspecialchars($topic['title']);
 include 'header.php';
@@ -87,49 +91,60 @@ include 'header.php';
     <div class="mb-4">
         <a href="forum.php" class="text-sm text-primary hover:underline">&laquo; Vissza a fórumra</a>
         <div class="flex justify-between items-start mt-2">
-            <h1 class="text-3xl font-bold"><?php echo htmlspecialchars($topic['title']); ?></h1>
-            <?php if ($current_user_id && ($current_user_id == $topic['topic_author_id'] || $current_user_role == 'admin')): ?>
-                <a href="edit_topic.php?id=<?php echo $topic_id; ?>" class="text-sm text-primary hover:underline flex-shrink-0 ml-4">Téma szerkesztése</a>
-            <?php endif; ?>
+            <div>
+                <h1 class="text-3xl font-bold"><?php echo htmlspecialchars($topic['title']); ?></h1>
+                <?php if($topic['edited_at']): ?><p class="text-xs italic text-muted-light dark:text-muted-dark">Szerkesztve: <?php echo date('Y.m.d H:i', strtotime($topic['edited_at'])); ?></p><?php endif; ?>
+            </div>
+            <div class="flex items-center gap-4 flex-shrink-0 ml-4">
+                <?php if ($current_user_id && ($current_user_id == $topic['topic_author_id'] || $current_user_role == 'admin')): ?>
+                    <a href="edit_topic.php?id=<?php echo $topic_id; ?>" class="text-sm text-primary hover:underline">Téma szerkesztése</a>
+                <?php endif; ?>
+                <?php if ($current_user_role == 'admin'): ?>
+                    <a href="topic.php?id=<?php echo $topic_id; ?>&delete_topic=1" class="text-sm text-red-500 hover:underline" onclick="return confirm('Biztosan törölni szeretnéd ezt a teljes témát minden hozzászólásával együtt?')">Téma törlése</a>
+                <?php endif; ?>
+            </div>
         </div>
-        <?php if($topic['topic_edited_at']): ?>
-            <p class="text-xs italic text-muted-light dark:text-muted-dark">Szerkesztve: <?php echo date('Y.m.d H:i', strtotime($topic['topic_edited_at'])); ?></p>
-        <?php endif; ?>
     </div>
 
     <div class="space-y-6">
         <?php foreach ($posts as $post): ?>
         <div class="flex flex-col sm:flex-row gap-4 p-4 rounded-lg bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark">
             <div class="flex-shrink-0 text-center w-full sm:w-32">
-                <img src="<?php echo htmlspecialchars($post['avatar_url']); ?>" alt="avatar" class="w-16 h-16 rounded-full mx-auto">
-                <p class="font-bold mt-2 text-primary"><?php echo htmlspecialchars($post['username']); ?></p>
-                <p class="text-xs text-muted-light dark:text-muted-dark"><?php echo ucfirst($post['role']); ?></p>
+                <?php if ($post['username']): ?>
+                    <a href="profile.php?id=<?php echo $post['user_id']; ?>">
+                        <img src="<?php echo htmlspecialchars($post['avatar_url']); ?>" alt="avatar" class="w-16 h-16 rounded-full mx-auto object-cover">
+                        <p class="font-bold mt-2 text-primary hover:underline"><?php echo htmlspecialchars($post['username']); ?></p>
+                    </a>
+                    <p class="text-xs text-muted-light dark:text-muted-dark"><?php echo ucfirst($post['role']); ?></p>
+                <?php else: ?>
+                    <img src="deleted_user.png" alt="törölt felhasználó" class="w-16 h-16 rounded-full mx-auto opacity-60">
+                    <p class="font-bold mt-2 text-gray-500 italic">Törölt felhasználó</p>
+                <?php endif; ?>
             </div>
             <div class="flex-1 sm:border-l sm:border-border-light sm:dark:border-border-dark sm:pl-4">
                 <div class="flex justify-between items-center text-xs text-muted-light dark:text-muted-dark mb-2">
                     <span>Posztolva: <?php echo date('Y.m.d H:i', strtotime($post['created_at'])); ?></span>
-                    <?php if ($current_user_id && ($current_user_id == $post['post_author_id'] || $current_user_role == 'admin')): ?>
+                    <?php 
+                    if ($current_user_id && ($current_user_role == 'admin' || $current_user_id == $post['post_author_id'])): ?>
                         <div class="flex gap-3">
-                             <a href="edit_post.php?id=<?php echo $post['post_id']; ?>" class="hover:underline">Szerkesztés</a>
-                             <a href="topic.php?id=<?php echo $topic_id; ?>&delete_post=<?php echo $post['post_id']; ?>" 
-                                class="text-red-500 hover:underline" 
-                                onclick="return confirm('Biztosan törölni szeretnéd ezt a hozzászólást? Ez a művelet nem vonható vissza.')">Törlés</a>
+                             <?php if ($post['username']): ?>
+                                <a href="edit_post.php?id=<?php echo $post['post_id']; ?>" class="hover:underline">Szerkesztés</a>
+                             <?php endif; ?>
+                             <a href="topic.php?id=<?php echo $topic_id; ?>&delete_post=<?php echo $post['post_id']; ?>" class="text-red-500 hover:underline" onclick="return confirm('Biztosan törölni szeretnéd ezt a hozzászólást?')">Törlés</a>
                         </div>
                     <?php endif; ?>
                 </div>
                 <div class="prose dark:prose-invert max-w-none text-text-light dark:text-text-dark">
                     <p><?php echo nl2br(htmlspecialchars($post['content'])); ?></p>
                 </div>
-                 <?php if($post['post_edited_at']): ?>
-                    <p class="text-xs italic text-muted-light dark:text-muted-dark mt-4">Szerkesztve: <?php echo date('Y.m.d H:i', strtotime($post['post_edited_at'])); ?></p>
-                 <?php endif; ?>
+                 <?php if($post['edited_at']): ?><p class="text-xs italic text-muted-light dark:text-muted-dark mt-4">Szerkesztve: <?php echo date('Y.m.d H:i', strtotime($post['edited_at'])); ?></p><?php endif; ?>
             </div>
         </div>
         <?php endforeach; ?>
     </div>
     
     <div class="mt-8">
-        <?php if (isset($_SESSION['user_id'])): ?>
+        <?php if ($current_user_id): ?>
             <h3 class="text-2xl font-bold mb-4">Válasz írása</h3>
             <?php if (!empty($errors)): ?>
                 <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
