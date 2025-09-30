@@ -37,7 +37,6 @@ A felhasználók regisztrálhatnak, bejelentkezhetnek, feltölthetik a fordítá
 - Importáld a projekt `database.sql` fájlját az adatbázisba
 
 ### 5. Konfiguráció
-- Nyisd meg a projekt mappájában az `.env` vagy `config.php` fájlt
 - Állítsd be az adatbázis kapcsolatot:
   - host: `localhost`
   - user: `root`
