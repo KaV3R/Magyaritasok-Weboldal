@@ -23,37 +23,30 @@ USE `magyarositasok`;
 CREATE TABLE IF NOT EXISTS `forum_posts` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `topic_id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
   `content` text NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `edited_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `topic_id` (`topic_id`),
   KEY `user_id` (`user_id`),
-  CONSTRAINT `forum_posts_ibfk_1` FOREIGN KEY (`topic_id`) REFERENCES `forum_topics` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `forum_posts_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
+  CONSTRAINT `forum_posts_ibfk_1` FOREIGN KEY (`topic_id`) REFERENCES `forum_topics` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
 
--- Dumping data for table magyarositasok.forum_posts: ~2 rows (approximately)
-INSERT INTO `forum_posts` (`id`, `topic_id`, `user_id`, `content`, `created_at`, `edited_at`) VALUES
-	(1, 1, 3, 'UwU, Lehet', '2025-09-29 22:09:15', '2025-09-29 22:21:11'),
-	(2, 1, 3, 'Yaya', '2025-09-29 22:21:00', NULL);
+-- Dumping data for table magyarositasok.forum_posts: ~0 rows (approximately)
 
 -- Dumping structure for table magyarositasok.forum_topics
 CREATE TABLE IF NOT EXISTS `forum_topics` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
   `title` varchar(255) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `edited_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`),
-  CONSTRAINT `forum_topics_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
 
--- Dumping data for table magyarositasok.forum_topics: ~1 rows (approximately)
-INSERT INTO `forum_topics` (`id`, `user_id`, `title`, `created_at`, `edited_at`) VALUES
-	(1, 3, 'Teszt', '2025-09-29 22:09:15', NULL);
+-- Dumping data for table magyarositasok.forum_topics: ~0 rows (approximately)
 
 -- Dumping structure for table magyarositasok.games
 CREATE TABLE IF NOT EXISTS `games` (
@@ -62,13 +55,16 @@ CREATE TABLE IF NOT EXISTS `games` (
   `description` text DEFAULT NULL,
   `cover_image` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
 
--- Dumping data for table magyarositasok.games: ~3 rows (approximately)
+-- Dumping data for table magyarositasok.games: ~6 rows (approximately)
 INSERT INTO `games` (`id`, `title`, `description`, `cover_image`) VALUES
 	(1, 'The Witcher 3: Wild Hunt', 'Légy Ríviai Geralt, a witcher, a szörnyvadász. Vár a háború dúlta, szörnyek prédálta kontinens. Aktuális megbízásod? Megkeresi Cirit, a Prófécia Gyermekét, az élő fegyvert, aki megváltoztathatja a világ képét.', 'https://upload.wikimedia.org/wikipedia/en/thumb/0/0c/Witcher_3_cover_art.jpg/250px-Witcher_3_cover_art.jpg'),
 	(2, 'Cyberpunk 2077', 'A Cyberpunk 2077 nyílt világú akciókaland-RPG, amely a hatalom, a fényűzés és a testmódosítások lázában élő jövőbeli megapoliszban, Night Cityben játszódik.', 'https://upload.wikimedia.org/wikipedia/en/9/9f/Cyberpunk_2077_box_art.jpg'),
-	(3, 'Stardew Valley', 'Örökölted nagyapád régi farmját a Stardew Valley-ban. Egy marék átörökölt szerszámmal és néhány érmével indulsz el, hogy új életet kezdj. Megtanulsz-e megélni a föld terményeiből, és sikerül-e ezeket a benőtt mezőket virágzó otthonná alakítanod?', 'https://upload.wikimedia.org/wikipedia/en/f/fd/Logo_of_Stardew_Valley.png');
+	(3, 'Stardew Valley', 'Örökölted nagyapád régi farmját a Stardew Valley-ban. Egy marék átörökölt szerszámmal és néhány érmével indulsz el, hogy új életet kezdj. Megtanulsz-e megélni a föld terményeiből, és sikerül-e ezeket a benőtt mezőket virágzó otthonná alakítanod?', 'https://upload.wikimedia.org/wikipedia/en/f/fd/Logo_of_Stardew_Valley.png'),
+	(4, 'Phasmophobia', 'A Phasmophobia egy 4 játékos online kooperatív pszichológiai horrorjáték. A természetfeletti tevékenységek száma növekszik, és rajtad és csapatodon múlik, hogy minden rendelkezésre álló szellemvadász felszerelésedet felhasználva minél több bizonyítékot gyűjtsetek.', 'https://data.xxlgamer.com/products/5142/DGslpxgzt6Q7HO-big.jpg'),
+	(5, 'STAR WARS Jedi: Survivor™', 'Cal Kestis történetét folytatja a STAR WARS Jedi: Survivor™, egy galaxisméretű, külső nézetes akció-kalandjáték', 'https://s.pacn.ws/1/p/15y/star-wars-jedi-survivor-755125.10.jpg'),
+	(6, 'Brick Rigs', 'Építsd meg saját járműveidet, vagy tölts le egyet a Workshopba feltöltött 200 000-nél több alkotás közül, és élvezd a Brick Rigs dinamikus vezetési és rombolási fizikai motorját!', 'https://static.driffle.com/fit-in/720x512/media-gallery/prod/166525242016434400_Brick_Rigs.webp');
 
 -- Dumping structure for table magyarositasok.translations
 CREATE TABLE IF NOT EXISTS `translations` (
@@ -80,16 +76,19 @@ CREATE TABLE IF NOT EXISTS `translations` (
   `description` text DEFAULT NULL,
   `translators` varchar(255) DEFAULT NULL,
   `translation_method` varchar(100) DEFAULT 'Nem megadott',
-  `file_path` varchar(255) NOT NULL,
+  `file_path` varchar(255) DEFAULT NULL,
+  `download_url` varchar(255) DEFAULT NULL,
   `upload_date` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   KEY `game_id` (`game_id`),
   CONSTRAINT `translations_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
   CONSTRAINT `translations_ibfk_2` FOREIGN KEY (`game_id`) REFERENCES `games` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
 
--- Dumping data for table magyarositasok.translations: ~0 rows (approximately)
+-- Dumping data for table magyarositasok.translations: ~1 rows (approximately)
+INSERT INTO `translations` (`id`, `user_id`, `game_id`, `version`, `status`, `description`, `translators`, `translation_method`, `file_path`, `download_url`, `upload_date`) VALUES
+	(16, 1, 6, '1.5.3', 'Kész', 'Olvasd El.txt ben benne van hogyan kell telepíteni.', 'Taks', 'Nem megadott', NULL, 'https://mega.nz/file/eMcDwaTI#cSjE-GX4qvvl_Rh4pkDpP_rdNZYdvlMmpFLjUHc1EcA', '2025-09-30 11:58:31');
 
 -- Dumping structure for table magyarositasok.users
 CREATE TABLE IF NOT EXISTS `users` (
@@ -104,11 +103,11 @@ CREATE TABLE IF NOT EXISTS `users` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
 
 -- Dumping data for table magyarositasok.users: ~1 rows (approximately)
 INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`, `bio`, `avatar_url`, `created_at`) VALUES
-	(1, 'admin', 'admin@mail.com', 'password', 'admin', 'bio\r\n', 'uploads/avatars/avatar_68db081eae9b83.18294511.jpg', '2025-09-29 22:04:18');
+	(1, 'admin', 'admin@admin.com', 'password', 'admin', 'bio', 'uploads/avatars/avatar_68db081eae9b83.18294511.jpg', '2025-09-29 22:04:18');
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
